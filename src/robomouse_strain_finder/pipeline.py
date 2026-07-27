@@ -29,6 +29,7 @@ from .config import Settings
 from .models import (
     Candidate,
     Counts,
+    GeneEvidence,
     GeneHit,
     PathwayHit,
     Provenance,
@@ -143,7 +144,12 @@ class StrainFinder:
 
         pathways = await self._pathways(genes, max_pathways)
         strains, gene_index = self._strains(
-            mouse_genes, max_strains, notes, exclude_mutation_types, exclude_tool_lines
+            mouse_genes,
+            max_strains,
+            notes,
+            exclude_mutation_types,
+            exclude_tool_lines,
+            gene_by_curie={gene.curie: gene for gene in genes},
         )
 
         counts = Counts(
@@ -369,11 +375,15 @@ class StrainFinder:
         notes: list[str],
         exclude_mutation_types: frozenset[str] = frozenset(),
         exclude_tool_lines: bool = False,
+        gene_by_curie: dict[str, GeneHit] | None = None,
     ) -> tuple[list[StrainHit], dict[str, str]]:
+        gene_by_curie = gene_by_curie or {}
         gene_index: dict[str, str] = {}
+        gene_by_mgi: dict[str, GeneHit] = {}
         for gene in mouse_genes:
             for mgi_id in gene.mgi_ids:
                 gene_index[mgi_id] = gene.symbol or gene.curie
+                gene_by_mgi[mgi_id] = gene
 
         if not gene_index:
             if mouse_genes:
@@ -400,7 +410,42 @@ class StrainFinder:
                 "Narrow the query or raise max_strains to see the rest."
             )
             hits = hits[:max_strains]
+
+        # Attach the gene->phenotype evidence to each hit. No extra queries --
+        # this is the gene stage's own output, joined on the MGI accession that
+        # produced the match.
+        for hit in hits:
+            hit.gene_evidence = [
+                self._evidence_for(gene_by_mgi[mgi_id], gene_by_curie)
+                for mgi_id in hit.matched_mgi_gene_ids
+                if mgi_id in gene_by_mgi
+            ]
         return hits, gene_index
+
+    def _evidence_for(self, gene: GeneHit, gene_by_curie: dict[str, GeneHit]) -> GeneEvidence:
+        """Build the evidence for one matched gene.
+
+        A gene reached by orthology has no association of its own -- the
+        predicates and sources belong to its human partner, so they are read
+        from that gene and reported with `via="ortholog"` so the attribution
+        stays explicit rather than being silently transferred to the mouse gene.
+        """
+        source = gene
+        partner = gene_by_curie.get(gene.ortholog_of) if gene.ortholog_of else None
+        if gene.via == "ortholog" and partner is not None:
+            source = partner
+        return GeneEvidence(
+            gene_symbol=gene.symbol,
+            gene_curie=gene.curie,
+            via=gene.via,
+            ortholog_of=gene.ortholog_of,
+            # None when the partner fell outside the returned gene set; the UI
+            # then shows the CURIE rather than inventing a symbol.
+            ortholog_of_symbol=partner.symbol if partner else None,
+            predicates=source.predicates,
+            knowledge_sources=source.knowledge_sources,
+            seed_curies=source.seed_curies or gene.seed_curies,
+        )
 
     # -- helpers --------------------------------------------------------------
 

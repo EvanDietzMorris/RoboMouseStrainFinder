@@ -354,7 +354,7 @@ function strainPanel(result) {
 
     body.replaceChildren(
       visible.length
-        ? table(["Stock", "Designation", "Matched gene / allele", "Specificity", "Mutation", "State", "Phenotypes"],
+        ? table(["Stock", "Designation", "Matched gene / allele", "Gene → phenotype evidence", "Genes matched", "Mutation", "State", "Phenotypes"],
             visible.map((s) => strainRow(s)),
           )
         : el("p", { class: "empty", text: "No strains match this filter." }),
@@ -411,6 +411,7 @@ function strainRow(s) {
     stockCell,
     el("td", { text: s.designation || "—" }),
     geneCell,
+    evidenceCell(s.gene_evidence || []),
     el("td", { class: "num" }, [
       meter(s.matched_fraction),
       el("span", {
@@ -429,6 +430,40 @@ function strainRow(s) {
             : [el("span", { class: "muted", text: "—" })],
       )),
   ]);
+}
+
+/** Why each matched gene is linked to the queried phenotype.
+ *  On an ortholog row the evidence belongs to the human partner, not the mouse
+ *  gene the stock carries -- so that is stated rather than implied. */
+function evidenceCell(evidence) {
+  if (!evidence.length) return el("td", {}, [el("span", { class: "muted", text: "—" })]);
+  return el(
+    "td",
+    {},
+    evidence.slice(0, 3).map((e) =>
+      el("div", { class: "evidence" }, [
+        ...chips((e.predicates || []).map((p) => p.replace("biolink:", "").replace(/_/g, " "))),
+        e.via === "ortholog"
+          ? el("div", { class: "muted evidence-note" }, [
+              "via ortholog of ",
+              el("span", { class: "mono", text: e.ortholog_of_symbol || e.ortholog_of || "?" }),
+              " (human)",
+            ])
+          : null,
+        (e.knowledge_sources || []).length
+          ? el("div", { class: "muted evidence-note" }, [
+              (e.knowledge_sources || [])
+                .slice(0, 4)
+                .map((k) => k.replace("infores:", ""))
+                .join(", "),
+              (e.knowledge_sources || []).length > 4
+                ? ` +${e.knowledge_sources.length - 4}`
+                : "",
+            ])
+          : null,
+      ]),
+    ),
+  );
 }
 
 function genePanel(genes) {
@@ -499,7 +534,8 @@ function exportCsv(result) {
   const headers = [
     "stock_id", "rrids", "designation", "matched_gene_symbols", "matched_mgi_gene_ids",
     "matched_fraction", "annotated_gene_count", "matched_allele_symbols",
-    "matched_allele_names", "matched_allele_link", "tool_line", "allele_symbols", "mgi_allele_ids",
+    "matched_allele_names", "matched_allele_link", "evidence_predicates",
+    "evidence_sources", "evidence_via", "tool_line", "allele_symbols", "mgi_allele_ids",
     "mutation_types", "states", "strain_types", "phenotypes", "pubmed_ids",
     "research_areas", "accepted_date", "sds_url",
   ];
@@ -515,6 +551,11 @@ function exportCsv(result) {
       (s.matched_alleles || []).map((a) => a.symbol).filter(Boolean),
       (s.matched_alleles || []).map((a) => a.name).filter(Boolean),
       [...new Set((s.matched_alleles || []).map((a) => a.link))],
+      [...new Set((s.gene_evidence || []).flatMap((e) => e.predicates || []))]
+        .map((p) => p.replace("biolink:", "")),
+      [...new Set((s.gene_evidence || []).flatMap((e) => e.knowledge_sources || []))]
+        .map((k) => k.replace("infores:", "")),
+      [...new Set((s.gene_evidence || []).map((e) => e.via))],
       String(s.tool_line ?? false),
       (s.alleles || []).map((a) => a.symbol).filter(Boolean),
       (s.alleles || []).map((a) => a.mgi_allele_id).filter(Boolean),

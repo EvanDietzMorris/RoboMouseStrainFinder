@@ -70,7 +70,7 @@ _TOKEN_RE = re.compile(r"[A-Za-z0-9._]+")
 #: the gene's biology. `Tg(Mc3r-EGFP)BX153Gsat` is a GENSAT reporter: it drives
 #: GFP off the Mc3r promoter and leaves Mc3r itself intact. It is not an obesity
 #: model, but it is annotated with Mc3r and carries exactly one gene, so it
-#: scores a perfect specificity of 1.00 and ranks alongside real knockouts.
+#: scores a perfect gene-match ratio of 1.00 and ranks alongside real knockouts.
 #:
 #: Deliberately restricted to `Tg(...)` transgenes. A targeted allele that
 #: happens to insert lacZ (`Gabrq<tm1Hmo>`) is still a knockout.
@@ -348,11 +348,11 @@ class MmrrcCatalog:
                 continue
             hits.append(hit)
 
-        # Rank by specificity, not raw match count. An ENU line annotated with
+        # Rank by the gene-match ratio, not raw match count. An ENU line with
         # 86 genes that happens to contain 3 query genes is a far weaker
         # candidate than a targeted mutant whose single annotated gene is a
         # query gene -- but raw count ranks the ENU line higher.
-        # Reporter and cre-driver lines score a perfect specificity but do not
+        # Reporter and cre-driver lines score a perfect gene-match ratio but do not
         # disrupt the gene, so they sort below real mutants at equal precision
         # rather than being hidden -- sometimes a reporter is what you want.
         hits.sort(

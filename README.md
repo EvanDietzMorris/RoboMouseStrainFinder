@@ -55,7 +55,8 @@ the same public API from the browser — vanilla JS, no framework, no build step
 - **KPI row** of stat tiles, then collapsible Strains / Genes / Pathways /
   Seed terms / Provenance sections. Strains open by default.
 - **Client-side strain filter** and **CSV export** of the full strain table.
-- **Specificity meter** per strain, showing matched ÷ annotated genes at a glance.
+- **Genes-matched meter** per strain, showing matched ÷ annotated genes at a glance.
+- **Reporter / driver badge** on stocks that are research tools rather than models.
 - Shareable URLs: `term`, `species`, and `curie` are kept in the query string,
   so `/app?term=epilepsy&species=human` runs that search on load.
 - Light and dark, following the system theme.
@@ -101,7 +102,8 @@ co-occurrence and drug-target semantics, neither of which means the gene is
 implicated in the condition. Every returned gene reports the predicates and
 primary knowledge sources that produced it.
 
-**Strains** are ranked by *specificity*, not raw match count. This matters more
+**Strains** are ranked by *how much of the stock the match accounts for*, not by
+raw match count. This matters more
 than it sounds: the MMRRC catalog is dominated by the Missouri ENU
 mutagenesis archive, where a single stock can carry 80+ incidental gene
 annotations. Ranking by "number of query genes matched" puts those lines above
@@ -109,6 +111,15 @@ every targeted knockout. Ranking by matched ÷ annotated genes puts the targeted
 models first. `annotated_gene_count` and `matched_fraction` are returned so the
 ranking is auditable, and `exclude_mutation_types=CI` drops the ENU lines
 entirely.
+
+**Reporter and cre-driver lines are demoted.** A GENSAT `Tg(Mc3r-EGFP)` line
+carries exactly one gene and so scores a perfect 1.00 — but it drives GFP off
+the promoter and leaves the gene intact. It is a research tool, not a model of
+that gene's disease. Such stocks are flagged `tool_line`, sorted below real
+mutants at an equal gene-match ratio, and can be removed with
+`exclude_tool_lines=true`. Detection is narrow: only `Tg(...)` transgenes whose
+payload is a marker or recombinase. A targeted allele that happens to insert
+lacZ is still a knockout.
 
 ### Evidence caveat
 

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RoboMouse Strain Finder — phenotype in, orderable mouse strains out</title>
-<meta name="description" content="Type a disease or phenotype in plain English. RoboMouse Strain Finder resolves it to an ontology term, traverses the knowledge graph through genes, orthologs and pathways, and returns MMRRC stocks ranked by specificity.">
+<meta name="description" content="Type a disease or phenotype in plain English. RoboMouse Strain Finder resolves it to an ontology term, traverses the knowledge graph through genes, orthologs and pathways, and returns MMRRC stocks ranked by how much of each stock the match accounts for.">
 <link rel="stylesheet" href="/static/app.css">
 <link rel="stylesheet" href="/static/landing.css">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🐁</text></svg>">
@@ -39,7 +39,7 @@
     <p class="lede">
       Say <em>epilepsy</em>. The finder resolves it to an ontology term, walks the knowledge
       graph out through genes, cross-species orthologs and pathways, and hands back the MMRRC
-      stocks you could order tomorrow — ranked by <strong>specificity</strong>, with every hop
+      stocks you could order tomorrow — ranked by <strong>how much of each stock the match accounts for</strong>, with every hop
       shown so you can argue with it.
     </p>
     <div class="cta-row">
@@ -426,7 +426,7 @@
 
   <section class="ranking" aria-labelledby="ranking-h">
     <div class="ranking-copy">
-      <h2 id="ranking-h">Ranked by specificity, not by hit count</h2>
+      <h2 id="ranking-h">Ranked by share of the stock, not by hit count</h2>
       <p>
         The MMRRC catalog is dominated by the Missouri ENU mutagenesis archive, where a single
         stock can carry eighty-odd incidental gene annotations. Rank by “number of query genes
@@ -442,7 +442,7 @@
       <div class="demo-head">Illustrative — not live results</div>
       <table>
         <thead>
-          <tr><th>Stock</th><th>Matched</th><th>Specificity</th></tr>
+          <tr><th>Stock</th><th>Matched</th><th>Genes matched</th></tr>
         </thead>
         <tbody>
           <tr>

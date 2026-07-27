@@ -110,6 +110,25 @@ class StrainAllele(BaseModel):
     link: str = "none"
 
 
+class GeneEvidence(BaseModel):
+    """Why a gene on a stock was implicated in the queried phenotype.
+
+    Carried on the strain so a hit can be judged without cross-referencing the
+    gene table. `via` matters for reading it honestly: on an `ortholog` row the
+    predicates and sources describe the **human** gene named in `ortholog_of`,
+    not the mouse gene the stock actually carries.
+    """
+
+    gene_symbol: str | None = None
+    gene_curie: str | None = None
+    via: str = "direct"
+    ortholog_of: str | None = None
+    ortholog_of_symbol: str | None = None
+    predicates: list[str] = Field(default_factory=list)
+    knowledge_sources: list[str] = Field(default_factory=list)
+    seed_curies: list[str] = Field(default_factory=list)
+
+
 class StrainHit(BaseModel):
     """An MMRRC stock reached from the gene set.
 
@@ -121,7 +140,7 @@ class StrainHit(BaseModel):
     mutagenesis line. A knockout carries one or two annotated genes; a
     chemically induced Mutagenetix stock can carry dozens of incidental
     variants, so a raw match count would rank the noisy stock first.
-    `matched_fraction` is the specificity used for ranking.
+    `matched_fraction` is that ratio, and is what the ranking sorts on.
     """
 
     stock_id: str
@@ -134,6 +153,9 @@ class StrainHit(BaseModel):
     #: The subset of `alleles` linked to a gene that matched the query. This is
     #: what makes a hit legible: the gene may be `a`, but the allele is `A<y>`.
     matched_alleles: list[StrainAllele] = Field(default_factory=list)
+    #: The gene->phenotype evidence behind each matched gene, joined on from the
+    #: gene stage so the strain row is self-contained.
+    gene_evidence: list[GeneEvidence] = Field(default_factory=list)
     gene_symbols: list[str] = Field(default_factory=list)
     matched_mgi_gene_ids: list[str] = Field(default_factory=list)
     matched_gene_symbols: list[str] = Field(default_factory=list)
@@ -141,7 +163,7 @@ class StrainHit(BaseModel):
     matched_fraction: float = 0.0
     #: True when every allele on the stock is a reporter or recombinase
     #: transgene -- a GENSAT `Tg(gene-EGFP)` line or a cre driver. These carry
-    #: one gene and so score a perfect specificity, but they leave the gene
+    #: one gene and so score a perfect gene-match ratio, but they leave the gene
     #: intact and are research tools rather than models of its disease.
     tool_line: bool = False
     phenotypes: list[str] = Field(default_factory=list)

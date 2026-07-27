@@ -225,7 +225,7 @@ From four words of English to four orderable *Mecp2* knockouts.
 
 ## Two decisions that determine whether the output is usable
 
-### 1. Rank strains by specificity, not by match count
+### 1. Rank by how much of the stock the match accounts for, not by match count
 
 The obvious ranking — "how many of my genes does this stock carry?" — produces
 garbage, and it took a live run to see it.
@@ -255,6 +255,21 @@ MMRRC:029171-UCD   B6.129S1-Chrna4<tm2Lst>    1/1   Chrna4
 *Chrnb2*, *Chrna7*, *Chrna4* — nicotinic receptor subunits, the classic ADNFLE
 epilepsy genes. Both numbers are shown in the UI so the ranking is auditable,
 and ENU lines can be filtered out entirely.
+
+A second trap sits behind the same number. A GENSAT reporter line —
+`Tg(Mc3r-EGFP)BX153Gsat` — is annotated with exactly one gene, so it also scores
+a perfect **1.00** and ranked 6th for `obesity`. But it drives GFP off the *Mc3r*
+promoter and leaves *Mc3r* itself completely intact: it is a tool for visualising
+where the gene is expressed, not a model of what happens when it fails. There are
+1,371 such lines in the catalog, and every one scores the maximum.
+
+They are now flagged and sorted below real mutants at an equal ratio. The same
+reporter moved from rank 6 to **rank 97** — behind all 96 genuine mutants that
+also score 1.00 — and can be filtered out entirely.
+
+The lesson generalises: the ratio measures whether the gene is the *point* of the
+stock. It says nothing about what the allele actually *does*. That needs a
+separate signal.
 
 ### 2. Show the allele, not just the gene
 
@@ -332,5 +347,5 @@ Related limits worth stating out loud:
 6. **Mouse gene → MMRRC stock** via MGI accessions pulled from the gene's
    equivalent-identifier clique.
 
-Ranked by specificity, annotated with the actual allele, and labelled with the
+Ranked by the gene-match ratio, annotated with the actual allele, and labelled with the
 evidence that produced each hop.

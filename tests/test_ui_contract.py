@@ -12,6 +12,7 @@ import pytest
 from robomouse_strain_finder.models import (
     Candidate,
     Counts,
+    GeneEvidence,
     GeneHit,
     PathwayHit,
     Provenance,
@@ -39,11 +40,15 @@ EXPECTED = {
     PathwayHit: {"curie", "name", "gene_curies", "gene_symbols"},
     StrainHit: {
         "stock_id", "rrids", "designation", "matched_gene_symbols",
-        "matched_mgi_gene_ids", "matched_fraction", "annotated_gene_count",
-        "alleles", "matched_alleles", "mutation_types", "states", "strain_types",
+        "matched_mgi_gene_ids", "matched_fraction", "annotated_gene_count", "tool_line",
+        "alleles", "matched_alleles", "gene_evidence", "mutation_types", "states", "strain_types",
         "phenotypes", "pubmed_ids", "research_areas", "accepted_date", "sds_url",
     },
     StrainAllele: {"symbol", "mgi_allele_id", "name", "link", "gene_symbols"},
+    GeneEvidence: {
+        "gene_symbol", "gene_curie", "via", "ortholog_of", "ortholog_of_symbol",
+        "predicates", "knowledge_sources", "seed_curies",
+    },
     Provenance: {
         "name_resolver_url", "graph_url", "graph_version", "catalog_path",
         "catalog_rows", "catalog_modified_at", "retrieved_at",

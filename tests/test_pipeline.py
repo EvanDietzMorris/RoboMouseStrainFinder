@@ -156,6 +156,76 @@ async def test_human_query_reaches_a_mouse_strain_through_ortholog(catalog: Mmrr
 
 
 @pytest.mark.asyncio
+async def test_strain_carries_the_gene_to_phenotype_evidence(catalog: MmrrcCatalog) -> None:
+    """The strain row must be readable without cross-referencing the gene table,
+    and must not imply the mouse gene owns evidence that belongs to its human
+    ortholog."""
+    nameres = FakeNameResolver(
+        [Candidate(curie="MONDO:0005027", label="epilepsy", score=1.0)]
+    )
+    automat = FakeAutomat(
+        {
+            "biolink:Gene`)\n        WHERE t.id IN": [
+                {
+                    "curie": "NCBIGene:729230", "symbol": "CCR2", "taxon": "NCBITaxon:9606",
+                    "predicates": ["biolink:causes", "biolink:genetically_associated_with"],
+                    "seed_curies": ["MONDO:0005027"],
+                    "sources": ["infores:omim", "infores:disgenet"],
+                    "mgi_ids": [], "seed_count": 1, "predicate_count": 2,
+                }
+            ],
+            "orthologous_to": [
+                {
+                    "curie": "NCBIGene:12772", "symbol": "Ccr2", "taxon": "NCBITaxon:10090",
+                    "mgi_ids": ["MGI:106185"], "ortholog_of": ["NCBIGene:729230"],
+                }
+            ],
+        }
+    )
+    finder = build_finder(catalog, nameres, automat)
+
+    result = await finder.search(term="epilepsy", species=Species.HUMAN)
+
+    evidence = result.strains[0].gene_evidence
+    assert len(evidence) == 1
+    assert evidence[0].gene_symbol == "Ccr2"
+    # The evidence is attributed to the human partner, by symbol.
+    assert evidence[0].via == "ortholog"
+    assert evidence[0].ortholog_of == "NCBIGene:729230"
+    assert evidence[0].ortholog_of_symbol == "CCR2"
+    # ...and it is the human gene's predicates and sources that are carried.
+    assert evidence[0].predicates == ["biolink:causes", "biolink:genetically_associated_with"]
+    assert evidence[0].knowledge_sources == ["infores:disgenet", "infores:omim"]
+    assert evidence[0].seed_curies == ["MONDO:0005027"]
+
+
+@pytest.mark.asyncio
+async def test_direct_hits_report_no_ortholog_attribution(catalog: MmrrcCatalog) -> None:
+    nameres = FakeNameResolver([Candidate(curie="MP:0002064", label="seizures", score=1.0)])
+    automat = FakeAutomat(
+        {
+            "biolink:Gene`)\n        WHERE t.id IN": [
+                {
+                    "curie": "NCBIGene:12772", "symbol": "Ccr2", "taxon": "NCBITaxon:10090",
+                    "predicates": ["biolink:model_of"], "seed_curies": ["MP:0002064"],
+                    "sources": ["infores:mgi"], "mgi_ids": ["MGI:106185"],
+                    "seed_count": 1, "predicate_count": 1,
+                }
+            ]
+        }
+    )
+    finder = build_finder(catalog, nameres, automat)
+
+    result = await finder.search(term="seizures", species=Species.MOUSE)
+
+    evidence = result.strains[0].gene_evidence[0]
+    assert evidence.via == "direct"
+    assert evidence.ortholog_of is None
+    assert evidence.ortholog_of_symbol is None
+    assert evidence.knowledge_sources == ["infores:mgi"]
+
+
+@pytest.mark.asyncio
 async def test_orthologs_can_be_disabled(catalog: MmrrcCatalog) -> None:
     nameres = FakeNameResolver(
         [Candidate(curie="MONDO:0005027", label="epilepsy", score=1.0)]

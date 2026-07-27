@@ -249,13 +249,16 @@ td.num { font-variant-numeric: tabular-nums; white-space: nowrap; } /* columns a
 .chip.plain { background: transparent; padding-left: 0; }
 
 .chip.tool { background: var(--warn-bg); color: var(--warn-ink); border: 1px solid var(--warn-line); }
+.evidence { margin-bottom: .35rem; }
+.evidence:last-child { margin-bottom: 0; }
+.evidence-note { font-size: .74rem; line-height: 1.3; }
 .allele { margin-top: .2rem; line-height: 1.35; }
 .allele .mono { color: var(--ink); }
 .allele-name { font-size: .76rem; }
 .muted { color: var(--ink-muted); }
 .empty { padding: 1.1rem .9rem; color: var(--ink-muted); font-style: italic; }
 
-/* Specificity meter: same-ramp track, fill carries magnitude. */
+/* Gene-match meter: same-ramp track, fill carries magnitude. */
 .meter { display: flex; align-items: center; gap: .45rem; }
 .meter-track {
   width: 42px; height: 5px; border-radius: 3px; background: var(--surface-2); overflow: hidden; flex: none;

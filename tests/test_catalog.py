@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from robomouse_strain_finder.catalog import MmrrcCatalog
+from robomouse_strain_finder.catalog import MmrrcCatalog, _is_tool_allele
 
 # Mirrors the real export, including the trailing space on RESEARCH_AREAS.
 HEADER = [
@@ -351,6 +351,113 @@ def test_only_alleles_of_the_matched_gene_are_returned(tmp_path: Path) -> None:
     hit = catalog.stocks_for_genes({"MGI:lep": "Lep"})[0]
     assert [a.symbol for a in hit.matched_alleles] == ["Lep<ob>"]
     assert len(hit.alleles) == 2  # the full list is still available
+
+
+def test_a_stock_with_no_mutation_type_survives_an_exclusion(tmp_path: Path) -> None:
+    """Regression: `set() <= {"CI"}` is True, so stocks with no mutation type
+    recorded were dropped by any exclusion. 6,151 gene-annotated stocks."""
+    catalog = _load(
+        tmp_path,
+        [{"STRAIN/STOCK_ID": "MMRRC:9-MU", "MGI_GENE_ACCESSION_ID": "MGI:z", "GENE_SYMBOL": "Zzz"}],
+    )
+    assert catalog.stocks["MMRRC:9-MU"].mutation_types == set()
+    hits = catalog.stocks_for_genes({"MGI:z": "Zzz"}, exclude_mutation_types=frozenset({"CI"}))
+    assert [h.stock_id for h in hits] == ["MMRRC:9-MU"]
+
+
+@pytest.mark.parametrize(
+    "symbol,is_tool",
+    [
+        ("Tg(Mc3r-EGFP)BX153Gsat", True),
+        ("Tg(Nefh-cre)12Kul", True),
+        ("Tg(Camk2a-CreERT2)1Xyz", True),
+        ("Tg(Slc6a3-tdTomato)3Abc", True),
+        ("Tg(Myh6-Pln)11Egk", False),  # functional transgene: a real gene payload
+        ("Tg(APPSWE)2576Kha", False),  # disease transgene, no payload segment
+        ("Gabrq<tm1Hmo>", False),  # targeted knockout, even though it inserts lacZ
+        ("Mecp2<tm1.1Jae>", False),
+        ("A<y>", False),
+    ],
+)
+def test_tool_line_detection(symbol: str, is_tool: bool) -> None:
+    assert _is_tool_allele(symbol) is is_tool
+
+
+def test_reporter_lines_rank_below_real_mutants_at_an_equal_gene_match(tmp_path: Path) -> None:
+    """A GENSAT reporter carries one gene, so it scores a perfect 1.00 and used
+    to outrank knockouts on stock-id order alone."""
+    catalog = _load(
+        tmp_path,
+        [
+            {
+                "STRAIN/STOCK_ID": "MMRRC:000264-UNC",
+                "MGI_ALLELE_ACCESSION_ID": "MGI:r",
+                "ALLELE_SYMBOL": "Tg(Mc3r-EGFP)BX153Gsat",
+                "MUTATION_TYPE": "TG",
+            },
+            {
+                "STRAIN/STOCK_ID": "MMRRC:000264-UNC",
+                "MGI_GENE_ACCESSION_ID": "MGI:mc3r",
+                "GENE_SYMBOL": "Mc3r",
+            },
+            {
+                "STRAIN/STOCK_ID": "MMRRC:999999-UCD",
+                "MGI_ALLELE_ACCESSION_ID": "MGI:k",
+                "ALLELE_SYMBOL": "Mc3r<tm1Butl>",
+                "MUTATION_TYPE": "TM",
+            },
+            {
+                "STRAIN/STOCK_ID": "MMRRC:999999-UCD",
+                "MGI_GENE_ACCESSION_ID": "MGI:mc3r",
+                "GENE_SYMBOL": "Mc3r",
+            },
+        ],
+    )
+    hits = catalog.stocks_for_genes({"MGI:mc3r": "Mc3r"})
+    assert [h.matched_fraction for h in hits] == [1.0, 1.0]  # identical gene-match ratio
+    # The knockout wins despite sorting later by stock id.
+    assert [h.stock_id for h in hits] == ["MMRRC:999999-UCD", "MMRRC:000264-UNC"]
+    assert [h.tool_line for h in hits] == [False, True]
+
+
+def test_tool_lines_can_be_excluded(tmp_path: Path) -> None:
+    catalog = _load(
+        tmp_path,
+        [
+            {
+                "STRAIN/STOCK_ID": "MMRRC:000264-UNC",
+                "MGI_ALLELE_ACCESSION_ID": "MGI:r",
+                "ALLELE_SYMBOL": "Tg(Mc3r-EGFP)BX153Gsat",
+            },
+            {
+                "STRAIN/STOCK_ID": "MMRRC:000264-UNC",
+                "MGI_GENE_ACCESSION_ID": "MGI:mc3r",
+                "GENE_SYMBOL": "Mc3r",
+            },
+        ],
+    )
+    assert catalog.stocks_for_genes({"MGI:mc3r": "Mc3r"}, exclude_tool_lines=True) == []
+    assert len(catalog.stocks_for_genes({"MGI:mc3r": "Mc3r"})) == 1
+
+
+def test_a_stock_mixing_a_knockout_and_a_cre_is_not_a_tool_line(tmp_path: Path) -> None:
+    catalog = _load(
+        tmp_path,
+        [
+            {
+                "STRAIN/STOCK_ID": "MMRRC:8-MU",
+                "MGI_ALLELE_ACCESSION_ID": "MGI:1",
+                "ALLELE_SYMBOL": "Tg(Nefh-cre)12Kul",
+            },
+            {
+                "STRAIN/STOCK_ID": "MMRRC:8-MU",
+                "MGI_ALLELE_ACCESSION_ID": "MGI:2",
+                "ALLELE_SYMBOL": "Foo<tm1Bar>",
+            },
+            {"STRAIN/STOCK_ID": "MMRRC:8-MU", "MGI_GENE_ACCESSION_ID": "MGI:f", "GENE_SYMBOL": "Foo"},
+        ],
+    )
+    assert catalog.stocks["MMRRC:8-MU"].is_tool_line is False
 
 
 def test_missing_required_column_is_an_error(tmp_path: Path) -> None:
