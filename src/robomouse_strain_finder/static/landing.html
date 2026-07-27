@@ -1,0 +1,506 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RoboMouse Strain Finder — phenotype in, orderable mouse strains out</title>
+<meta name="description" content="Type a disease or phenotype in plain English. RoboMouse Strain Finder resolves it to an ontology term, traverses the knowledge graph through genes, orthologs and pathways, and returns MMRRC stocks ranked by specificity.">
+<link rel="stylesheet" href="/static/app.css">
+<link rel="stylesheet" href="/static/landing.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>🐁</text></svg>">
+</head>
+<body class="landing">
+<a class="skip-link" href="#main">Skip to content</a>
+
+<nav class="topbar" aria-label="Primary">
+  <a class="wordmark" href="/">
+    <svg viewBox="0 0 28 28" aria-hidden="true" focusable="false">
+      <circle cx="6" cy="7" r="3.2"/>
+      <circle cx="6" cy="21" r="3.2"/>
+      <path d="M6 7 L18 14 M6 21 L18 14" stroke-width="1.8" fill="none"/>
+      <circle cx="21" cy="10" r="3"/>
+      <circle cx="21" cy="18" r="3"/>
+      <circle cx="19" cy="14" r="6" class="wm-head"/>
+    </svg>
+    <span><b>RoboMouse</b> Strain Finder</span>
+  </a>
+  <div class="topbar-links">
+    <a href="/docs">API docs</a>
+    <a href="/healthz">Status</a>
+    <a class="btn btn-primary btn-sm" href="/app">Open the finder</a>
+  </div>
+</nav>
+
+<main id="main">
+
+  <section class="hero">
+    <p class="eyebrow">RoboMouse KG · UPheno · Alliance orthology · MMRRC</p>
+    <h1>Pick the mouse that actually models your phenotype.</h1>
+    <p class="lede">
+      Say <em>epilepsy</em>. The finder resolves it to an ontology term, walks the knowledge
+      graph out through genes, cross-species orthologs and pathways, and hands back the MMRRC
+      stocks you could order tomorrow — ranked by <strong>specificity</strong>, with every hop
+      shown so you can argue with it.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="/app">Open the finder</a>
+      <a class="btn btn-ghost" href="/docs">Browse the API</a>
+    </div>
+  </section>
+
+  <figure class="hero-figure">
+    <svg class="hero-art" viewBox="0 0 1000 620" role="img" aria-labelledby="art-title art-desc"
+         xmlns="http://www.w3.org/2000/svg">
+      <title id="art-title">A protocol droid choosing a mouse cage</title>
+      <desc id="art-desc">A gold humanoid robot stands at a rack of laboratory mouse cages, its hand on
+        the one cage that is lit up. Inside it a tall lanky mouse grins and waves while a shorter mouse
+        with an enormous domed forehead points back at the robot.</desc>
+
+      <defs>
+        <linearGradient id="rmGold" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#f8e3a8"/>
+          <stop offset=".42" stop-color="#dfae45"/>
+          <stop offset="1" stop-color="#a97c22"/>
+        </linearGradient>
+        <linearGradient id="rmGoldSoft" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#f2d492"/>
+          <stop offset=".6" stop-color="#d2a23c"/>
+          <stop offset="1" stop-color="#9d7220"/>
+        </linearGradient>
+        <radialGradient id="rmGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#ffc861" stop-opacity=".5"/>
+          <stop offset=".5" stop-color="#ffb347" stop-opacity=".17"/>
+          <stop offset="1" stop-color="#ffb347" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="rmGlowInner" cx="50%" cy="45%" r="60%">
+          <stop offset="0" stop-color="#ffd07a" stop-opacity=".22"/>
+          <stop offset="1" stop-color="#ffd07a" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="rmFloorLight" cx="50%" cy="50%" r="50%">
+          <stop offset="0" stop-color="#ffbe57" stop-opacity=".34"/>
+          <stop offset="1" stop-color="#ffbe57" stop-opacity="0"/>
+        </radialGradient>
+        <radialGradient id="rmVignette" cx="48%" cy="42%" r="66%">
+          <stop offset=".5" stop-color="#0a0d11" stop-opacity="0"/>
+          <stop offset="1" stop-color="#0a0d11" stop-opacity=".2"/>
+        </radialGradient>
+
+        <!-- One dim, occupied cage, reused across the rack. -->
+        <symbol id="rmCage" viewBox="0 0 108 110">
+          <rect x="0" y="74" width="108" height="36" rx="8" fill="var(--art-tray)"/>
+          <g stroke="var(--art-wire-dim)" stroke-width="2.2" fill="none" opacity=".85">
+            <path d="M12 8V76M26 8V76M40 8V76M54 8V76M68 8V76M82 8V76M96 8V76"/>
+            <path d="M2 30H106M2 54H106"/>
+          </g>
+          <rect x="2" y="5" width="104" height="72" rx="7" fill="none"
+                stroke="var(--art-wire-dim)" stroke-width="3.2"/>
+          <g class="art-sleeper" opacity=".75">
+            <ellipse cx="64" cy="64" rx="21" ry="11" fill="#cdc6c0"/>
+            <circle cx="48" cy="56" r="7" fill="#cdc6c0"/>
+            <circle cx="48" cy="56" r="3.5" fill="#e0aeb0"/>
+            <path d="M42 62q-4 3-2 6" stroke="#b3aaa3" stroke-width="2" fill="none" stroke-linecap="round"/>
+            <path d="M85 62q9 3 6 10" stroke="#b3aaa3" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+          </g>
+        </symbol>
+      </defs>
+
+      <!-- ---------- backdrop ---------- -->
+      <rect width="1000" height="620" rx="18" fill="var(--art-wall)"/>
+      <rect y="524" width="1000" height="96" fill="var(--art-floor)"/>
+      <path d="M0 524H1000" stroke="var(--art-rack)" stroke-width="2" opacity=".4"/>
+
+      <!-- knowledge graph, faintly, on the back wall -->
+      <g opacity=".16" stroke="var(--art-node)" fill="none" stroke-width="2">
+        <path d="M62 104L132 62L204 108L156 166L62 104M204 108L272 66L342 122M272 66L408 74M156 166L92 214M342 122L408 74M408 74L470 130"/>
+      </g>
+      <g opacity=".24" fill="var(--art-node)">
+        <circle cx="62" cy="104" r="5"/><circle cx="132" cy="62" r="6.5"/>
+        <circle cx="204" cy="108" r="5"/><circle cx="156" cy="166" r="4"/>
+        <circle cx="272" cy="66" r="5.5"/><circle cx="342" cy="122" r="4.5"/>
+        <circle cx="92" cy="214" r="4"/><circle cx="408" cy="74" r="6"/>
+        <circle cx="470" cy="130" r="4"/>
+      </g>
+
+      <!-- ---------- the light coming off the chosen cage ---------- -->
+      <ellipse class="art-glow" cx="636" cy="418" rx="330" ry="270" fill="url(#rmGlow)"/>
+
+      <!-- ---------- rack ---------- -->
+      <g>
+        <rect x="404" y="120" width="564" height="14" rx="5" fill="var(--art-rack)"/>
+        <rect x="404" y="282" width="564" height="13" rx="5" fill="var(--art-rack)"/>
+        <rect x="404" y="516" width="564" height="14" rx="5" fill="var(--art-rack)"/>
+        <path d="M424 136L944 280M944 136L424 280" stroke="var(--art-rack-2)"
+              stroke-width="3" opacity=".3" fill="none"/>
+        <rect x="414" y="120" width="14" height="424" rx="4" fill="var(--art-rack-2)"/>
+        <rect x="944" y="120" width="14" height="424" rx="4" fill="var(--art-rack-2)"/>
+      </g>
+
+      <!-- the cages that were not chosen -->
+      <g class="art-dim-cages">
+        <use href="#rmCage" x="440" y="172" width="108" height="110"/>
+        <use href="#rmCage" x="562" y="172" width="108" height="110"/>
+        <use href="#rmCage" x="684" y="172" width="108" height="110"/>
+        <use href="#rmCage" x="806" y="172" width="108" height="110"/>
+        <use href="#rmCage" x="806" y="295" width="108" height="110"/>
+        <use href="#rmCage" x="806" y="406" width="108" height="110"/>
+      </g>
+
+      <!-- ---------- floor shadows ---------- -->
+      <ellipse cx="228" cy="558" rx="104" ry="15" fill="var(--art-shadow)"/>
+      <ellipse cx="636" cy="530" rx="230" ry="30" fill="url(#rmFloorLight)"/>
+
+      <!-- ---------- the droid ---------- -->
+      <g class="art-droid">
+        <!-- legs -->
+        <g fill="url(#rmGoldSoft)">
+          <rect x="242" y="404" width="34" height="78" rx="14"/>
+          <rect x="246" y="486" width="27" height="52" rx="11"/>
+          <rect x="184" y="404" width="34" height="78" rx="14"/>
+          <rect x="188" y="486" width="27" height="52" rx="11"/>
+        </g>
+        <g fill="#b8862a">
+          <circle cx="259" cy="482" r="15"/><circle cx="201" cy="482" r="15"/>
+          <rect x="244" y="532" width="31" height="9" rx="4"/>
+          <rect x="186" y="532" width="31" height="9" rx="4"/>
+        </g>
+        <g fill="#a97c22">
+          <path d="M236 540h44a9 9 0 0 1 9 9v7h-62v-7a9 9 0 0 1 9-9Z"/>
+          <path d="M178 540h44a9 9 0 0 1 9 9v7h-62v-7a9 9 0 0 1 9-9Z"/>
+        </g>
+
+        <!-- midriff wiring, then hips over it -->
+        <rect x="184" y="336" width="74" height="42" fill="#3a2c12"/>
+        <g stroke-linecap="round" fill="none">
+          <path d="M192 336q6 20 0 42" stroke="#c08a3a" stroke-width="4"/>
+          <path d="M204 336q-6 20 0 42" stroke="#8a6318" stroke-width="4"/>
+          <path d="M216 336q7 18 1 42" stroke="#d2a23c" stroke-width="3.5"/>
+          <path d="M228 336q-7 18 -1 42" stroke="#8a6318" stroke-width="4"/>
+          <path d="M240 336q6 22 0 42" stroke="#c08a3a" stroke-width="3.5"/>
+          <path d="M251 336q-5 20 0 42" stroke="#6b4a12" stroke-width="4"/>
+        </g>
+        <rect x="172" y="370" width="100" height="42" rx="15" fill="url(#rmGoldSoft)"/>
+        <path d="M222 374v34" stroke="#8a6318" stroke-width="2.5" opacity=".6"/>
+
+        <!-- chest -->
+        <rect x="166" y="268" width="108" height="76" rx="18" fill="url(#rmGold)"/>
+        <rect x="160" y="250" width="120" height="26" rx="13" fill="#eac773"/>
+        <path d="M198 286q22 12 44 0" stroke="#8a6318" stroke-width="2.5" fill="none" opacity=".45"/>
+        <rect x="194" y="296" width="52" height="30" rx="6" fill="#8a6318"/>
+        <circle cx="206" cy="311" r="4.2" fill="#ffd479"/>
+        <circle cx="220" cy="311" r="4.2" fill="#ffb347"/>
+        <circle cx="234" cy="311" r="4.2" fill="#6b4a12"/>
+
+        <!-- near arm, holding a slate -->
+        <path d="M166 278L152 338L170 394" fill="none" stroke="url(#rmGoldSoft)"
+              stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M162 284L149 336" fill="none" stroke="#f6dc9c" stroke-width="7"
+              stroke-linecap="round" opacity=".5"/>
+        <circle cx="152" cy="338" r="13" fill="#b8862a"/>
+        <g transform="rotate(-10 178 420)">
+          <rect x="140" y="394" width="76" height="50" rx="9" fill="#2c3238" stroke="#b8862a" stroke-width="2.5"/>
+          <rect x="147" y="401" width="62" height="36" rx="4" fill="#10151a"/>
+          <g fill="#ffc861">
+            <rect x="153" y="423" width="8" height="10" rx="1.5"/>
+            <rect x="165" y="415" width="8" height="18" rx="1.5"/>
+            <rect x="177" y="409" width="8" height="24" rx="1.5"/>
+            <rect x="189" y="419" width="8" height="14" rx="1.5" opacity=".55"/>
+          </g>
+        </g>
+        <ellipse cx="172" cy="398" rx="14" ry="11" fill="url(#rmGoldSoft)"/>
+
+        <!-- shoulders -->
+        <circle cx="168" cy="272" r="19" fill="url(#rmGoldSoft)"/>
+        <circle cx="276" cy="272" r="19" fill="url(#rmGoldSoft)"/>
+        <circle cx="276" cy="272" r="10" fill="#b8862a" opacity=".6"/>
+
+        <!-- reaching arm -->
+        <path d="M280 278L344 314L428 352" fill="none" stroke="url(#rmGoldSoft)"
+              stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M288 272L340 302" fill="none" stroke="#f6dc9c" stroke-width="7"
+              stroke-linecap="round" opacity=".5"/>
+        <circle cx="344" cy="314" r="14" fill="#b8862a"/>
+        <circle cx="344" cy="314" r="7" fill="#8a6318" opacity=".7"/>
+
+        <!-- head, tipped toward the cage -->
+        <g transform="rotate(8 218 250)">
+          <rect x="200" y="216" width="38" height="38" rx="9" fill="#a97c22"/>
+          <g stroke="#7a5814" stroke-width="3">
+            <path d="M200 226h38M200 236h38M200 246h38"/>
+          </g>
+          <path d="M236 122l6-26" stroke="#b8862a" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="242" cy="94" r="4.5" fill="#e2b455"/>
+          <ellipse cx="218" cy="170" rx="48" ry="54" fill="url(#rmGold)"/>
+          <ellipse cx="203" cy="142" rx="22" ry="13" fill="#f8e3a8" opacity=".5"/>
+          <circle cx="171" cy="177" r="9.5" fill="#b8862a"/>
+          <circle cx="265" cy="175" r="9.5" fill="#b8862a"/>
+          <path d="M176 152c0 56 24 70 42 70s42-14 42-70c-16-12-68-12-84 0Z" fill="url(#rmGoldSoft)"/>
+          <path d="M176 149c22-11 62-11 84 0" stroke="#8a6318" stroke-width="4" fill="none" stroke-linecap="round"/>
+          <circle class="art-eye-glow" cx="198" cy="170" r="17" fill="#ffd479"/>
+          <circle class="art-eye-glow" cx="240" cy="168" r="17" fill="#ffd479"/>
+          <circle cx="198" cy="170" r="14" fill="#6b4a12"/>
+          <circle cx="240" cy="168" r="14" fill="#6b4a12"/>
+          <circle cx="198" cy="170" r="9.5" fill="#ffe9b0"/>
+          <circle cx="240" cy="168" r="9.5" fill="#ffe9b0"/>
+          <circle cx="195" cy="166" r="3" fill="#fffaea"/>
+          <circle cx="237" cy="164" r="3" fill="#fffaea"/>
+          <rect x="215" y="178" width="7" height="16" rx="3" fill="#8a6318" opacity=".55"/>
+          <rect x="197" y="197" width="42" height="15" rx="4" fill="#4a340d"/>
+          <g fill="#d2a23c">
+            <rect x="201" y="199" width="3" height="11"/><rect x="209" y="199" width="3" height="11"/>
+            <rect x="217" y="199" width="3" height="11"/><rect x="225" y="199" width="3" height="11"/>
+            <rect x="233" y="199" width="3" height="11"/>
+          </g>
+        </g>
+      </g>
+
+      <!-- ---------- the chosen cage ---------- -->
+      <g class="art-hero-cage">
+        <ellipse cx="636" cy="520" rx="176" ry="14" fill="var(--art-shadow)"/>
+        <rect x="474" y="324" width="322" height="192" rx="12" fill="url(#rmGlowInner)"/>
+
+        <!-- back wall of wire, behind the animals -->
+        <g stroke="var(--art-wire)" stroke-width="2" opacity=".18" fill="none">
+          <path d="M502 326V458M526 326V458M550 326V458M574 326V458M598 326V458M622 326V458M646 326V458M670 326V458M694 326V458M718 326V458M742 326V458M766 326V458"/>
+        </g>
+
+        <!-- the lanky one -->
+        <g class="art-mouse">
+          <path d="M562 442c-40 10-50-18-32-30" fill="none" stroke="#c9c1ba" stroke-width="5" stroke-linecap="round"/>
+          <path d="M572 440v22M596 440v22" stroke="#ded7d1" stroke-width="9" stroke-linecap="round"/>
+          <ellipse cx="585" cy="412" rx="25" ry="35" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <ellipse cx="583" cy="420" rx="15" ry="24" fill="#f1ece8" opacity=".85"/>
+          <path d="M604 396l24-42" fill="none" stroke="#ded7d1" stroke-width="9" stroke-linecap="round"/>
+          <circle cx="630" cy="350" r="8" fill="#ded7d1" stroke="#b9b0a9" stroke-width="1.6"/>
+          <path d="M566 400l-12 30" fill="none" stroke="#ded7d1" stroke-width="9" stroke-linecap="round"/>
+          <circle cx="566" cy="335" r="13" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <circle cx="566" cy="335" r="7.5" fill="#e8a7ab"/>
+          <circle cx="601" cy="332" r="13" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <circle cx="601" cy="332" r="7.5" fill="#e8a7ab"/>
+          <circle cx="585" cy="357" r="26" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <ellipse cx="562" cy="366" rx="14" ry="9" fill="#e9e4df" transform="rotate(-14 562 366)"/>
+          <circle cx="549" cy="368" r="4" fill="#d98d95"/>
+          <circle cx="574" cy="352" r="7" fill="#fbfaf9"/>
+          <circle cx="597" cy="349" r="7" fill="#fbfaf9"/>
+          <circle cx="573" cy="353" r="3.4" fill="#2a2724"/>
+          <circle cx="596" cy="350" r="3.4" fill="#2a2724"/>
+          <path d="M556 378q12 12 24 3" fill="none" stroke="#8d837b" stroke-width="2.4" stroke-linecap="round"/>
+          <path d="M562 383h5v8h-5zM568 384h5v7h-5z" fill="#fffdf8" stroke="#c9c1ba" stroke-width="1"/>
+        </g>
+
+        <!-- the one with the forehead -->
+        <g class="art-mouse">
+          <path d="M722 448c34 4 40-20 26-30" fill="none" stroke="#c9c1ba" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M718 424l14 20" fill="none" stroke="#d5cec8" stroke-width="8" stroke-linecap="round"/>
+          <ellipse cx="702" cy="432" rx="21" ry="27" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <ellipse cx="700" cy="438" rx="12" ry="17" fill="#f1ece8" opacity=".85"/>
+          <circle cx="674" cy="345" r="9" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <circle cx="674" cy="345" r="5" fill="#e8a7ab"/>
+          <circle cx="730" cy="343" r="9" fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <circle cx="730" cy="343" r="5" fill="#e8a7ab"/>
+          <path d="M669 381c-5-38 14-55 33-55s38 17 33 55c-4 21-20 27-33 27s-29-6-33-27Z"
+                fill="#ded7d1" stroke="#b9b0a9" stroke-width="2"/>
+          <ellipse cx="690" cy="352" rx="15" ry="10" fill="#efeae6" opacity=".6"/>
+          <path d="M692 428l-22-8" fill="none" stroke="#d5cec8" stroke-width="8" stroke-linecap="round"/>
+          <circle cx="662" cy="418" r="7.5" fill="#ded7d1" stroke="#b9b0a9" stroke-width="1.6"/>
+          <path d="M656 413l-15-8" fill="none" stroke="#ded7d1" stroke-width="5" stroke-linecap="round"/>
+          <ellipse cx="674" cy="398" rx="15" ry="10" fill="#efeae6" stroke="#cdc5be" stroke-width="1.3"
+                   transform="rotate(-14 674 398)"/>
+          <circle cx="660" cy="400" r="4.2" fill="#d98d95"/>
+          <circle cx="688" cy="378" r="8" fill="#fbfaf9"/>
+          <circle cx="712" cy="376" r="8" fill="#fbfaf9"/>
+          <circle cx="685" cy="379" r="4" fill="#2a2724"/>
+          <circle cx="709" cy="377" r="4" fill="#2a2724"/>
+          <path d="M678 361l17 8M726 358l-17 9" stroke="#8d837b" stroke-width="3.6" stroke-linecap="round"/>
+          <path d="M684 400q12 7 22-4" fill="none" stroke="#8d837b" stroke-width="2.4" stroke-linecap="round"/>
+        </g>
+
+        <!-- bedding, heaped above the tray rim -->
+        <path d="M474 452q26-12 54-3 32-13 62-1 30-12 60 1 30-13 62-2 24-9 42 3v34H474Z" fill="#dbcaa4"/>
+        <g fill="#c4b088" opacity=".8">
+          <rect x="498" y="452" width="16" height="4" rx="2" transform="rotate(-12 506 454)"/>
+          <rect x="562" y="455" width="18" height="4" rx="2" transform="rotate(8 571 457)"/>
+          <rect x="648" y="450" width="15" height="4" rx="2" transform="rotate(-6 655 452)"/>
+          <rect x="716" y="455" width="17" height="4" rx="2" transform="rotate(14 724 457)"/>
+        </g>
+
+        <!-- water bottle -->
+        <g opacity=".8">
+          <rect x="768" y="336" width="18" height="46" rx="8" fill="#cfe0ea" stroke="var(--art-wire)" stroke-width="2"/>
+          <path d="M777 382v14" stroke="var(--art-wire)" stroke-width="3" stroke-linecap="round"/>
+        </g>
+
+        <!-- front wire, over everything inside -->
+        <g stroke="var(--art-wire)" stroke-width="2.6" opacity=".45" fill="none" stroke-linecap="round">
+          <path d="M490 328V462M514 328V462M538 328V462M562 328V462M586 328V462M610 328V462M634 328V462M658 328V462M682 328V462M706 328V462M730 328V462M754 328V462M778 328V462"/>
+        </g>
+        <g stroke="var(--art-wire)" stroke-width="2.6" opacity=".32" fill="none" stroke-linecap="round">
+          <path d="M478 356H792M478 394H792M478 432H792"/>
+        </g>
+
+        <!-- tray, label, frame -->
+        <path d="M470 462h330v42a14 14 0 0 1-14 14H484a14 14 0 0 1-14-14Z"
+              fill="var(--art-tray)" opacity=".92"/>
+        <path d="M470 462h330" stroke="var(--art-wire)" stroke-width="3"/>
+        <g>
+          <rect x="496" y="472" width="106" height="32" rx="5" fill="#fbfaf8" stroke="#c6bfb7" stroke-width="1.5"/>
+          <rect x="504" y="479" width="58" height="5" rx="2.5" fill="#b6b0a8"/>
+          <rect x="504" y="490" width="40" height="5" rx="2.5" fill="#cbc5bd"/>
+          <g fill="#4b463f">
+            <rect x="572" y="477" width="2" height="21"/><rect x="577" y="477" width="3" height="21"/>
+            <rect x="583" y="477" width="2" height="21"/><rect x="588" y="477" width="4" height="21"/>
+            <rect x="595" y="477" width="2" height="21"/>
+          </g>
+        </g>
+        <path d="M600 322c4-30 76-30 80 0" fill="none" stroke="var(--art-wire)"
+              stroke-width="5" stroke-linecap="round"/>
+        <rect x="470" y="320" width="330" height="198" rx="12" fill="none"
+              stroke="var(--art-wire)" stroke-width="4"/>
+      </g>
+
+      <!-- ---------- the hand on the latch ---------- -->
+      <g class="art-hand" fill="url(#rmGoldSoft)" stroke="#8a6318" stroke-width="1.5">
+        <ellipse cx="438" cy="362" rx="18" ry="22"/>
+        <rect x="440" y="336" width="46" height="12" rx="6" transform="rotate(-6 463 342)"/>
+        <rect x="442" y="352" width="48" height="12" rx="6"/>
+        <rect x="442" y="368" width="46" height="12" rx="6" transform="rotate(4 465 374)"/>
+        <rect x="440" y="384" width="40" height="11" rx="5.5" transform="rotate(10 460 389)"/>
+        <rect x="424" y="384" width="28" height="12" rx="6" transform="rotate(52 438 390)"/>
+      </g>
+    </svg>
+    <figcaption>
+      Six cages on the rack. One of them is the model you actually wanted — the finder's whole
+      job is telling you which.
+    </figcaption>
+  </figure>
+
+  <section class="flow" aria-labelledby="flow-h">
+    <h2 id="flow-h">One query, five hops, nothing hidden</h2>
+    <ol class="flow-steps">
+      <li><span class="step-k">free text</span><span class="step-v">“epilepsy”</span></li>
+      <li><span class="step-k">NameRes</span><span class="step-v mono">MONDO:0005027</span></li>
+      <li><span class="step-k">UPheno bridge</span><span class="step-v mono">MP:*</span></li>
+      <li><span class="step-k">RoboMouse KG</span><span class="step-v">genes → orthologs → pathways</span></li>
+      <li><span class="step-k">MMRRC catalog</span><span class="step-v">orderable stocks</span></li>
+    </ol>
+  </section>
+
+  <section class="features" aria-labelledby="features-h">
+    <h2 id="features-h">What makes the answer trustworthy</h2>
+    <div class="card-grid">
+      <article class="card">
+        <h3>You pin the term, not the guess</h3>
+        <p>Type-ahead resolves against NameRes. Picking a suggestion pins that CURIE, so the
+          traversal starts from the concept you meant rather than the top-scoring match.</p>
+      </article>
+      <article class="card">
+        <h3>Curated predicates only</h3>
+        <p>Genes are collected through association predicates — <code>has_phenotype</code>,
+          <code>causes</code>, <code>model_of</code> and friends. <code>related_to</code> and
+          <code>target_for</code> are excluded on purpose: co-occurrence and drug-target
+          semantics are not implication.</p>
+      </article>
+      <article class="card">
+        <h3>Cross-species by construction</h3>
+        <p>UPheno bridges HP↔MP and MONDO→MP; Alliance orthology bridges human↔mouse genes.
+          Ask in human and you still land on mouse stocks. Turn either bridge off to see the
+          unexpanded result.</p>
+      </article>
+      <article class="card">
+        <h3>Every hit carries its receipts</h3>
+        <p>Each gene reports the predicates and primary knowledge sources that produced it.
+          Each response carries the graph version, catalog date and retrieval time.</p>
+      </article>
+      <article class="card">
+        <h3>Shareable and exportable</h3>
+        <p>Term, vocabulary and pinned CURIE live in the query string, so a result is a link you
+          can paste to a collaborator. The full strain table exports to CSV.</p>
+      </article>
+      <article class="card">
+        <h3>Same API underneath</h3>
+        <p>The page calls nothing private — <code>/api/resolve</code> and <code>/api/search</code>
+          are the same endpoints your notebook can hit. No build step, no framework, no
+          server-rendered results.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="ranking" aria-labelledby="ranking-h">
+    <div class="ranking-copy">
+      <h2 id="ranking-h">Ranked by specificity, not by hit count</h2>
+      <p>
+        The MMRRC catalog is dominated by the Missouri ENU mutagenesis archive, where a single
+        stock can carry eighty-odd incidental gene annotations. Rank by “number of query genes
+        matched” and those lines bury every targeted knockout.
+      </p>
+      <p>
+        So the ranking is <strong>matched ÷ annotated</strong>. Both numbers come back with the
+        result, so you can audit the order — and one checkbox drops the chemically-induced lines
+        entirely.
+      </p>
+    </div>
+    <div class="ranking-demo" aria-label="Illustrative ranking, not real results">
+      <div class="demo-head">Illustrative — not live results</div>
+      <table>
+        <thead>
+          <tr><th>Stock</th><th>Matched</th><th>Specificity</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Targeted knockout</td>
+            <td class="num">5 / 6</td>
+            <td><span class="meter"><span class="meter-track"><span class="meter-fill" style="width:83%"></span></span><span class="num">0.83</span></span></td>
+          </tr>
+          <tr>
+            <td>Conditional allele</td>
+            <td class="num">3 / 5</td>
+            <td><span class="meter"><span class="meter-track"><span class="meter-fill" style="width:60%"></span></span><span class="num">0.60</span></span></td>
+          </tr>
+          <tr>
+            <td>ENU archive line <span class="chip">CI</span></td>
+            <td class="num">7 / 84</td>
+            <td><span class="meter"><span class="meter-track"><span class="meter-fill" style="width:8%"></span></span><span class="num">0.08</span></span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="caveat" aria-labelledby="caveat-h">
+    <div class="caveat-box">
+    <h2 id="caveat-h">Read this before you order anything</h2>
+    <p>
+      A returned strain is a <strong>gene-level candidate</strong>. It is annotated with a gene the
+      knowledge graph associates with your phenotype — that is <em>not</em> a claim that the stock's
+      allele reproduces the phenotype. Confirm allele, zygosity and genetic background against the
+      MMRRC strain detail sheet and the originating publication. Gene-level similarity is not allele
+      equivalence.
+    </p>
+    </div>
+  </section>
+
+  <section class="try" aria-labelledby="try-h">
+    <h2 id="try-h">Start with one of these</h2>
+    <ul class="try-list">
+      <li><a href="/app?term=epilepsy&species=human">epilepsy<span>human vocabulary</span></a></li>
+      <li><a href="/app?term=obesity&species=mouse">obesity<span>mouse vocabulary</span></a></li>
+      <li><a href="/app?term=hearing%20loss&species=human">hearing loss<span>human vocabulary</span></a></li>
+      <li><a href="/app?term=Rett%20syndrome&species=human">Rett syndrome<span>human vocabulary</span></a></li>
+    </ul>
+    <p class="try-foot"><a class="btn btn-primary" href="/app">Or search for your own →</a></p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>
+    RoboMouse Strain Finder · built on
+    <a href="https://robokop-automat.apps.renci.org/robomousekg/graph-metadata">RoboMouse KG</a>,
+    UPheno, Alliance orthology and the MMRRC bulk catalog.
+  </p>
+  <p class="muted">
+    Not affiliated with, or endorsed by, any film or television rights holder. The droid and the
+    two mice are original drawings.
+  </p>
+</footer>
+</body>
+</html>
